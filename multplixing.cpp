@@ -178,7 +178,7 @@ void        multplixing::lanch_server(server parse)
                                 if (close_fd(events[i].data.fd))
                                     continue ;
                             }
-                            // flag = 1;
+                            flag = 1;
                         }
                     }
                     if (!it_fd->second.requst.redirect_path.empty())
@@ -198,8 +198,14 @@ void        multplixing::lanch_server(server parse)
                             }
                         }
                     }
+                    // print with bold yellow "I AM IN THE READ FUNCTION"
+                    std::cout << "\033[1;33mI AM IN THE READ FUNCTION\033[0m" << std::endl;
+                    // print the vlue of rq.method + flag + it_fd->second.not_allow_method with bold yellow
+                    std::cout << "\033[1;33m" << rq.method << " " << flag << " " << it_fd->second.not_allow_method << "\033[0m" << std::endl;
                     if (rq.method == "POST" && flag == 1 && !it_fd->second.not_allow_method)
                     {
+                        // print with bold red "I AM IN THE POST FUNCTION"
+                        std::cout << "\033[1;31mI AM IN THE POST FUNCTION\033[0m" << std::endl;
                         fd_maps[events[i].data.fd].post_.j = 0;
                         if (fd_maps[events[i].data.fd].post_.post_method(buffer)  && !it_fd->second.not_allow_method)
                             fd_maps[events[i].data.fd].post_.j = 1;

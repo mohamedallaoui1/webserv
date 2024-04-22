@@ -114,13 +114,22 @@ char **cgi::fillCgiEnv(int fd) {
 
 void    cgi::cgi_method(request& rq, int fd) {
     std::cout << "\033[1;31mI AM ABOUT TO FORK\033[0m" << std::endl;
-
+    std::stringstream iss;
+    iss << time(NULL);
+    std::string name;
+    iss >> name;
+    std::string filename ="/tmp/" + name;
     int id = fork();
     if (id == 0) {
-        freopen("/nfs/homes/mallaoui/Desktop/ttt/website/cgi.txt", "rw", stdout);
+        FILE *fp = freopen(filename.c_str(), "w", stdout);
+        if (fp == NULL) {
+            std::cerr << "freopen error" << std::endl;
+            exit(1);
+        }
         char **env = fillCgiEnv(fd);
         char **args = new char*[3];
         // print with bold red "I AM IN THE CHILD PROCCESS"
+        std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
         args[0] = strdup(compiler.c_str());
         args[1] = strdup(rq.uri.c_str());
         args[2] = NULL;
@@ -132,6 +141,8 @@ void    cgi::cgi_method(request& rq, int fd) {
     else {
         waitpid(id, NULL, 0);
     }
+    // print with yellow "-----------------------------------"
+    std::cout << "\033[1;33m-----------------------------------\033[0m" << std::endl;
 }
 
 cgi::~cgi(){

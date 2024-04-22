@@ -104,6 +104,7 @@ void            request::parse_req(std::string   rq, server &server, int fd) // 
         it->second.not_allow_method = 1;
         return ;
     }
+    (void)state;
     reset();
 }
 
