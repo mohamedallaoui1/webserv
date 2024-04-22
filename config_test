@@ -1,0 +1,54 @@
+same servername                 stat = 1
+host ip check Valid.            stat = 1
+location argument.              stat = 1
+parse maxbodyclient.            stat = 0
+default config_file.            stat = 1
+
+http://localhost:8080/folder    stat = 1
+
+location 
+{
+    return : path;              stat = 0
+    upload_status : on or off;  stat = 1
+    upload_PATH : paTH;         stat = 1
+    CGI_STATUS : on or off:     stat = 1
+    cgi type: commend;          stat = 1
+}
+
+cgi_allowed ON;
+cgi     /usr/bin/python3 .py;
+
+403
+409
+402 No contetnt
+500 internal server error
+
+307 post
+301 get
+
+ELKAMAL:
+    file extension not suported file.jfiw                   Done
+    without extension content-type should be "octet-stream" Done
+    get file without extension and then list directory      Done
+    file permission atlest read for [user or other] ????
+    Not allowed method on config file                       Done
+
+#config file.
+1- if you have multiple servers and they have the same host, port and server name it must throw and error; Done
+2- newline segv  Done
+3- duplicate location. Done
+3- musn't iterat on all server must now who server is running and work on it "go to request.cpp to know". Done
+
+
+??????
+
+--- ranges error pages status
+--- error pages extention
+--- allow_methods  GET POST POST
+--- upload path not found or permissin to upload 
+--- location /@#!# not allowed characters
+--- http://localhost:8080/a/b i get not found ???
+
+
+-- same port and ip (and same server_name if exist) is ERROR  Done
+
