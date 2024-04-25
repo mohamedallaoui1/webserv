@@ -24,10 +24,19 @@ int isIP(std::string host) {
 }
 
 void request::getServer(int fd) {
-
+    // magic hh
     int client_fd = client_history[fd];
     it = server_history[client_fd];
+}
 
+void checkifservername(std::string& ip, int& is_servername) {
+    int count_dots = 0;
+    for (size_t i = 0; i < ip.length(); i++) {
+        if (ip[i] == '.')
+            count_dots++;
+    }
+    if (count_dots != 3)
+        is_servername = 1;
 }
 
 int request::parseHost(std::string hst, int fd) {
@@ -35,49 +44,38 @@ int request::parseHost(std::string hst, int fd) {
     std::string port;
     std::string incoming_port;
     std::string incoming_ip;
-    // int         ip_port = 0;
-    // for (it = pars.s.begin(); it != pars.s.end(); it++) {
-    //         std::cout << "CONFPORT: '" << (*it)->cont.find("listen")->second << "'" << " INCOMING PORT: '" << port << "'\n";
-    //     if ((*it)->cont.find("listen")->second == port) {
-    //         if ((*it)->cont["server_name"] == hst)
-    //             break;
-    //         if ((*it)->cont.find("host")->second == ip || ip == "localhost") {
-    //             if (ip_port) {
-    //                 break ;
-    //             }
-    //         }
-    //         else
-    //             continue;
-    //     }
-    //     else
-    //         continue;
-    // }
-    // if (it == pars.s.end()) {
-    //     perror("server NOT found");
-    //     exit(404);
-    // }
+    std::map<int, Client>::iterator it3 = fd_maps.find(fd);
     getServer(fd);
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
-    if (isIP(hst)) {
-        ip = hst.substr(0, hst.find(':'));
-        port = hst.substr(hst.find(':') + 1);
-        std::cout << "IP: '" << ip << "'" << " PORT: '" << port << "'" << std::endl;
-    }
-    if ((*it)->cont["server_name"] == hst) {
-        std::cout << "\033[1;32mSERVER FOUND USING SERVER NAME\033[0m" << std::endl;
-        return (0);
+    int is_servername = 0;
+    // print with vold green the value of hst
+    std::cout << "\033[1;38;5;82mSERVER NAME IS: '" << hst << "'\033[0m" << std::endl;
+    ip = hst.substr(0, hst.find(':'));
+    checkifservername(ip, is_servername);
+    port = hst.substr(hst.find(':') + 1);
+    if (port == "" || hst.find_first_of(':') == std::string::npos) {
+        // print with wave red "port is empty"
+    std::cout << "\033[5m\033[38;5;208mPORT IS EMPTY: '" << port << "'\033[0m" << std::endl;
+        it3->second.resp.response_error("400", fd);
     }
     std::vector<server *>::iterator it2;
     for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
+        if (!is_servername)
+            break;
+        if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == hst) {
+            it = it2;
+            return (0);
+        }
+    }
+    for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
-            std::cout << "\033[1;32mSERVER FOUND USING THE FIRST APEARENCE OF IP+PORT\033[0m " << (*it2)->cont["listen"] << " " << (*it2)->cont["host"] << " " << incoming_port << " " << incoming_ip << std::endl;
+            it = it2;
             return (0);
         }
         else
             continue;
     }
-    std::cout << "\033[1;31mSERVER NOT FOUND\033[0m\n";
     return (1);
 }
 

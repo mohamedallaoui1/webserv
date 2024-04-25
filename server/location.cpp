@@ -1,23 +1,11 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   location.cpp                                       :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ayylaaba <ayylaaba@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/02/06 17:45:30 by ayylaaba          #+#    #+#             */
-/*   Updated: 2024/02/17 10:24:50 by ayylaaba         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../location.hpp"
 
-location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::map <std::string, std::string> &redirc)
+location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::string &redirc)
 {
     cont_l = c;
     allowed_methods = v_s;
     cgi_map = cgi_m;
-    redirction_map = redirc;
+    redirction_path = redirc;
 }
 
 int     location::check_exist(std::string path)

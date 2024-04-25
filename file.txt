@@ -1,1 +1,3 @@
 auto index off =>> 403 (mashi 404)
+servername must be with the port number 
+http://127.0.0.1:8080/../server1/main.cpp must give 403 not 404

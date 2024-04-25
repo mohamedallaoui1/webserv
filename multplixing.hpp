@@ -37,7 +37,7 @@ class multplixing
         std::vector<int>   serverSocket;
         int     string_to_int(std::string str);
         in_addr_t convertIpv4toBinary(const std::string& ip);
-        int     close_fd(int fd);
+        static int     close_fd(int fd, int epl);
         multplixing(){
         };
 };

@@ -10,13 +10,12 @@ size_t MAX_CLIENTS = 10;
 int main(int ac, char **av) 
 {
     server              parse;
-    // int                 respo;
     request             rq;
     multplixing         mlp;
 
     if (ac < 2)
         parse.mange_file("def.conf");
-    if (ac == 2)
+    else if (ac == 2)
         parse.mange_file(av[1]);
     else
         parse.print_err("Argement Not Valid");

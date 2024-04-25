@@ -41,7 +41,7 @@ class location
         std::vector<std::string>            l_vec;
         std::vector<std::string>            allowed_methods;
         std::map<std::string, std::string>  cgi_map;
-        std::map<std::string, std::string>  redirction_map;
+        std::string                         redirction_path;
         std::vector<location*>              l;
         std::vector<std::string>            vec_locas;
         int                                 l_token;
@@ -52,7 +52,7 @@ class location
         void                                print_err(std::string str);
         void                                check_dup();
         void                                cgi_extention();
-        location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::map <std::string, std::string> &redirc);
+        location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::string &redirc);
         location();
 };
 

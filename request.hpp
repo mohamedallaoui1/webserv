@@ -34,6 +34,7 @@ class request
         std::string                         full_path;
         std::string                         full_rest;
         std::string                         loca__root;
+        std::string                         redirction_path;
         size_t                              pos;
         bool                                found;
         bool                                method_state;
@@ -41,10 +42,13 @@ class request
         unsigned long                       g;
         size_t                              check;
         int                                 x;
+        int                                 redirection_stat;
         int                                 redirct_loca;
+        int                                 check_redi;
         int                                 x_cgi;
         std::string                         longest_loca;
         std::string                         stat_cgi;
+        std::string                         upload_path;
         std::string                         line;
         size_t                              last;
         std::vector<std::string>            vec;
@@ -80,7 +84,6 @@ class request
         int                                        one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods);
         int                                        parseHost(std::string hst, int fd);
         void                                       getServer(int fd);
-        
 
         template <typename T>
         std::string to_string(T value) 
@@ -92,6 +95,7 @@ class request
         request();
         ~request();
 };
+
 
 
 #endif

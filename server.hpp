@@ -26,6 +26,7 @@ class server : public location
 {
     public:
         std::string                         server_n;
+        std::string                         max_body;
         std::string                         port;
         std::string                         id;
         std::string                         listen;
@@ -40,6 +41,7 @@ class server : public location
         std::map<std::string, std::string>  err_page;
         std::string                         str;
         std::string                         str_l;
+        std::string                         redirect_path;
         std::vector<std::string>            str_l_vec;
         int                                 s_token;
         std::vector<std::string>            s_vec;

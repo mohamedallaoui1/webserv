@@ -1,5 +1,6 @@
 #include "Client.hpp"
 #include "cgi.hpp"
+#include "multplixing.hpp"
 extern std::map<int, Client> fd_maps;
 
 cgi::cgi(){
@@ -83,6 +84,7 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
     if (it == path.end()) {
         std::cout << "\033[1;38;5;201mTHIS IS NOT CGI, THIS IS A FOLDER\033[0m" << std::endl;
         iscgi = 0;
+        stat_cgi = 0;
         return ;
     }
 
@@ -93,6 +95,7 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
 
     if (fd_maps[fd].requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd].requst.cgi_map.end()) {
         iscgi = 1;
+        stat_cgi = 1;
         compiler = fd_maps[fd].requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
         std::cout << "\033[1;38;5;82mTHIS IS CGI, yaaaY " << compiler << "\033[0m" << std::endl;
     }
@@ -104,6 +107,7 @@ char **cgi::fillCgiEnv(int fd) {
     env_v.push_back("REQUEST_METHOD=" + fd_maps[fd].requst.method);
     env_v.push_back("REDIRECT_STATUS=CGI");
     env_v.push_back("PATH_TRANSLATED=" + fd_maps[fd].requst.uri);
+    env_v.push_back("QUERY_STRING=");
     char **env = new char*[env_v.size() + 1];
     for (std::vector<std::string>::iterator it = env_v.begin(); it != env_v.end(); it++) {
         env[it - env_v.begin()] = strdup(it->c_str());
@@ -118,28 +122,41 @@ void    cgi::cgi_method(request& rq, int fd) {
     iss << time(NULL);
     std::string name;
     iss >> name;
-    std::string filename ="/tmp/" + name;
-    int id = fork();
-    if (id == 0) {
-        FILE *fp = freopen(filename.c_str(), "w", stdout);
-        if (fp == NULL) {
-            std::cerr << "freopen error" << std::endl;
-            exit(1);
-        }
-        char **env = fillCgiEnv(fd);
-        char **args = new char*[3];
+    file_out ="/tmp/" + name;
+    file_err = "/tmp/" + name + ".err";
+    file_in = "/tmp/" + name + ".in";
+    char **env = fillCgiEnv(fd);
+    char **args = new char*[3];
+    clientPid = fork();
+    if (clientPid == 0) {
+        freopen(file_out.c_str(), "w", stdout);
+        freopen(file_err.c_str(), "w", stderr);
+        freopen(file_in.c_str(), "r", stdin);
         // print with bold red "I AM IN THE CHILD PROCCESS"
-        std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
         args[0] = strdup(compiler.c_str());
         args[1] = strdup(rq.uri.c_str());
         args[2] = NULL;
-        if (execve(args[0], args, env) == -1) {
-            std::cout << "execve error" << std::endl;
-        }
-        exit(127);
+        execve(args[0], args, env);
+        std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
+        kill(getpid(), 2);
     }
     else {
-        waitpid(id, NULL, 0);
+        int status;
+        // print "I AM WAITING FOR THE CHILD TO FINISH"
+        std::cerr << "I AM WAITING FOR THE CHILD TO FINISH" << std::endl;
+        int wait = waitpid(clientPid, &status, WNOHANG);
+        // print with rainbow color the value of wait + clientPid
+        std::cerr << "\033[1;35mwait return : " << wait << " clientPid : " << clientPid << "\033[0m" << std::endl;
+        if (wait == 0) {
+            // print with bold red "CHILD PROCCESS FINISHED"
+            std::cerr << "\033[1;31mCHILD " << WIFSIGNALED(status) << " PROCCESS FINISHED\033[0m" << std::endl;
+            // if (WIFSIGNALED(status)) {
+            // std::cerr << "\033[1;34mRESPONSE ERROR 500 wait return : " << wait << "\033[0m" << std::endl;
+            //     // print with bold blue "RESPONSE ERROR 500"
+            //     fd_maps[fd].resp.response_error("500", fd);
+            //     multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+            // }
+        }
     }
     // print with yellow "-----------------------------------"
     std::cout << "\033[1;33m-----------------------------------\033[0m" << std::endl;

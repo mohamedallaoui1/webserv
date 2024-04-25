@@ -31,6 +31,10 @@ class cgi
         char **                             fillCgiEnv(int fd);
         std::string                         cgi_stat;
         std::string                         compiler;
+        std::string                         file_out;
+        std::string                         file_err;
+        std::string                         file_in;
+        pid_t                               clientPid;
 
         // Envirement //
         std::string                         REQUEST_METHOD;
@@ -41,6 +45,7 @@ class cgi
         std::string                         SCRIPT_FILENAME;
         std::string                         REDIRECT_STATUS;
         std::string                         SERVER_PORT;
+
         // ---------- //
         
         cgi();

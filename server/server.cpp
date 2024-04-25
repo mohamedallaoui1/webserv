@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../server.hpp"
+#define CYAN    "\033[36m"
+#define RESET   "\033[0m"
 
 int i = 0;
 
@@ -31,7 +33,7 @@ server::server(std::map<std::string, std::string> &cont_s, std::vector<location*
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
-    std::cout << "vec_of_locations size: " << vec_of_locations.size() << "\n";
+    // std::cout << "vec_of_locations size: " << vec_of_locations.size() << "\n";
 }
 
 std::string     server::strtrim(std::string &str)
@@ -147,11 +149,12 @@ void           server::message_response_stat()
         response_message["404"] = "Not Found";
         response_message["405"] = "Method Not Allowed";
         response_message["415"] = "Unsupported Media Type";
-        // response_message["501"] = "Not Implemented";
-        // response_message["502"] = "Bad Gateway";
-        // response_message["503"] = "Service Unavailable";
-        // response_message["504"] = "Gateway Timeout";
+        response_message["501"] = "Not Implemented";
+        response_message["502"] = "Bad Gateway";
+        response_message["503"] = "Service Unavailable";
+        response_message["504"] = "Gateway Timeout";
         response_message["505"] = "HTTP Version Not Supported";
+        response_message["500"] = "Internal Server Error";
         return ;
 }
 
@@ -178,12 +181,7 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 if (!l_vec[0].compare("cgi_path"))
                     cgi_map[l_vec[1]] = l_vec[2];
                 if (!l_vec[0].compare("return"))
-                {
-                    std::cout << "301 = '" << l_vec[1] << "'\n";
-                    if (l_vec[1].compare("301"))
-                        print_err("syntaxt_error redirection stat");
-                    redirction_map[l_vec[1]] = l_vec[2];
-                }
+                    redirction_path = l_vec[1];
                 stor_values(l_vec, 'l');
             }
         else if (!l_vec[0].compare("}"))
@@ -194,13 +192,12 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
                 // make map that store path location and root , you have root_
                 handl_loca(cont_l, v_s, _root);
                 cgi_extention();
-                l.push_back(new location(cont_l, v_s, cgi_map, redirction_map));
+                l.push_back(new location(cont_l, v_s, cgi_map, redirction_path));
                 check_dup();
                 cont_l.clear();
-                redirction_map.clear();
+                redirction_path.clear();
                 v_s.clear();
-                cgi_map.clear();
-                redirction_map.clear();
+                // cgi_map.clear();
                 break ;
             }
         }
@@ -216,9 +213,10 @@ int        server::parse_loca(std::ifstream& rd_cont, std::string &str_)
         if (!str_l_vec[0].compare("location"))
         {
             check_size(str_l_vec, 'l');
-            std::cout << "location after normale = " << controle_slash(str_l_vec[1]) << "\n";
+            // std::cout << "location after normale = " << controle_slash(str_l_vec[1]) << "\n";
             vec_of_locations.push_back(controle_slash(str_l_vec[1]));
-            cont_l[str_l_vec[0]]    = str_l_vec[1].substr(0, str_l_vec[1].size()); // store location with its path
+            cont_l[str_l_vec[0]]    = controle_slash(str_l_vec[1]); // store location with its path
+            // std::cout << CYAN << "cont_l = " << cont_l[str_l_vec[0]] << "value = " << str_l_vec[1] << RESET << "\n";
             return 1 ;
         }
         else
@@ -296,7 +294,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                     check_size(s_vec, 'l'); // check first loca's path
                     vec_of_locations.push_back(controle_slash(s_vec[1]));
                     std::cout << "first location after normal = " << controle_slash(s_vec[1]) << "\n";
-                    cont_l[s_vec[0]] = s_vec[1];
+                    cont_l[s_vec[0]] = controle_slash(s_vec[1]);
                     std::getline(rd_cont, str_);
                     str = strtrim(str);
                 }
@@ -357,7 +355,7 @@ void        server::check_size(std::vector<std::string> &s, char c)
     {
         if ((!s[0].compare("root") || !s[0].compare("index") 
         || !s[0].compare("limit_except") || !s[0].compare("autoindex") 
-        || !s[0].compare("upload")) || !s[0].compare("cgi_status") ){
+        || !s[0].compare("upload")) || !s[0].compare("cgi_status") || !s[0].compare("return")){
             if (s.size() != 2)
                 print_err("syntaxt_error on " + s[0]);
         }
@@ -370,7 +368,7 @@ void        server::check_size(std::vector<std::string> &s, char c)
             if (s.size() < 2 || s.size() > 2)
                 print_err("syntaxt_error on location");
         }
-        if (!s[0].compare("cgi_path") || !s[0].compare("return") )
+        if (!s[0].compare("cgi_path"))
         {
             if (s.size() != 3)
                 print_err("syntaxt_error on cgi_path");
@@ -393,7 +391,6 @@ void      server::handl_serv(std::vector<std::string> s)
     }
     else if (!s[0].compare("error_page"))
     {
-        std::cout << "s[1] ===> " << s[1] << "<====\n";
         if (!check_exist(s[2]))
             print_err("syntaxt_error on the file");
     }
@@ -412,6 +409,8 @@ void      server::handl_serv(std::vector<std::string> s)
         if (check_ip(s[1]) )
             print_err("syntaxt_error on ip");
     }
+    else if (!s[0].compare("client_max_body_size"))
+        max_body = s[1];
 }
 
 int      server::check_ip_nbr(std::string nbr)
