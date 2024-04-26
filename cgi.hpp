@@ -11,6 +11,7 @@
 #include <vector>
 #include <fstream>
 #include <fcntl.h>
+# include <time.h>
 
 
 class cgi
@@ -29,6 +30,7 @@ class cgi
         void                                checkifcgi(request& rq, int& iscgi, int fd);
         void                                cgi_method(request& rq, int fd);
         char **                             fillCgiEnv(int fd);
+        static void                                sendResponse(int clientSocket, const std::string& response, std::string status);
         std::string                         cgi_stat;
         std::string                         compiler;
         std::string                         file_out;
@@ -36,6 +38,8 @@ class cgi
         std::string                         file_in;
         pid_t                               clientPid;
         int                                 is_error;
+        time_t                              start_time;
+        std::string                         extension;
 
         // Envirement //
         std::string                         REQUEST_METHOD;

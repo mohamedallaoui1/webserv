@@ -73,7 +73,7 @@ std::map<std::string, std::string>            Client::message_response_stat()
         // response_message["501"] = "Not Implemented";
         // response_message["502"] = "Bad Gateway";
         // response_message["503"] = "Service Unavailable";
-        // response_message["504"] = "Gateway Timeout";
+        response_message["504"] = "Gateway Timeout";
         response_message["505"] = "HTTP Version Not Supported";
         return response_message;
 }

@@ -173,7 +173,9 @@ void        multplixing::lanch_server(server parse)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
                         {
-                            rq.parse_req(buffer, parse, events[i].data.fd );
+                            if (rq.parse_req(buffer, parse, events[i].data.fd ) == 1) {
+                                        continue ;
+                            };
                             if (isfdclosed)
                                 continue;
                             fd_maps[events[i].data.fd].requst     = rq;
@@ -190,6 +192,13 @@ void        multplixing::lanch_server(server parse)
                             }
                             // flag = 1;
                         }
+                        else {
+                            if (it_fd->second.resp.response_error("400", events[i].data.fd))
+                            {
+                                if (close_fd( events[i].data.fd, epoll_fd ))
+                                    continue ;
+                            }
+                        }
                     }
                     // print with bold yellow "I AM IN THE READ FUNCTION"
                     std::cout << "\033[1;33mI AM IN THE READ FUNCTION\033[0m" << std::endl;
@@ -200,8 +209,10 @@ void        multplixing::lanch_server(server parse)
                     {
                         // print with bold red "I AM IN THE POST FUNCTION"
                         std::cout << "\033[1;31mI AM IN THE POST FUNCTION\033[0m" << std::endl;
-                        if (fd_maps[events[i].data.fd].post_.post_method(buffer)  && !it_fd->second.not_allow_method)
+                        if (fd_maps[events[i].data.fd].post_.post_method(buffer)  && !it_fd->second.not_allow_method) {
                             fd_maps[events[i].data.fd].post_.j = 1;
+                            flag = 0;
+                        }
                     }
                     fd_maps[events[i].data.fd].u_can_send = 1;
                     std::cout << "CGI TESTING : '" << fd_maps[events[i].data.fd].requst.stat_cgi << "'" << std::endl;

@@ -328,7 +328,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
 int        server::check_stat(std::string &stat_error)
 {
     if (stat_error.compare("403") && stat_error.compare("404") && 
-    stat_error.compare("301")) // you should add more i think ...
+    stat_error.compare("301") && stat_error.compare("500")) // you should add more i think ...
         return 1;
     return 0;
 }

@@ -1,19 +1,21 @@
 #include "../get_method.hpp"
 #include "../Client.hpp"
 #include "../multplixing.hpp"
+# include "../cgi.hpp"
 
 extern std::map<int, Client> fd_maps;
 
 get_method::get_method(){
 }
 
-void sendResponse(int clientSocket, const std::string& response) {
+void cgi::sendResponse(int clientSocket, const std::string& response, std::string status) {
     std::stringstream iss;
     iss << response.length();
     std::string responseLength = iss.str();
-    std::string status = "200 OK";
+    status = "200 OK";
     if (fd_maps[clientSocket].cgi_.is_error)
         status = "500 Internal Server Error";
+        // response = getErrorPage(fd);
     std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
     httpResponse += "Content-Type: text/html\r\n";
     httpResponse += "Content-Length: " + responseLength + "\r\n";
@@ -22,6 +24,26 @@ void sendResponse(int clientSocket, const std::string& response) {
 
     send(clientSocket, httpResponse.c_str(), httpResponse.length(), 0);
     multplixing::close_fd(clientSocket, fd_maps[clientSocket].epoll_fd);
+}
+
+std::string getContent (std::string file, int fd) {
+    std::string content;
+    std::ifstream fileStream;
+    fileStream.open(file.c_str());
+    if (fileStream.is_open()) {
+        std::stringstream sstr;
+        sstr << fileStream.rdbuf();
+        content = sstr.str();
+        fileStream.close();
+    }
+    if (fd_maps[fd].cgi_.extension == "php") {
+        size_t pos = content.find("\r\n\r\n");
+        if (pos != std::string::npos) {
+            content = content.substr(pos + 4);
+            return content;
+        }
+    }
+    return content;
 }
 
 int    get_method::get_mthod(int fd)
@@ -56,20 +78,22 @@ int    get_method::get_mthod(int fd)
     if (check_path == 1)
     {
         if (fd_maps[fd].cgi_.stat_cgi) {
+            time_t end = time(NULL);
             std::string cgi_file = fd_maps[fd].cgi_.file_out; // 0000 update
             int status;
             int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
             if (wait == fd_maps[fd].cgi_.clientPid) {
-                std::ifstream file;
-                file.open(cgi_file.c_str());
+                // std::ifstream file;
+                // file.open(cgi_file.c_str());
                 std::string content;
-                std::string line;
-                while (std::getline(file, line)) {
-                    if (file.eof())
-                        content += line;
-                    else
-                        content += line + "\n";
-                }
+                // std::string line;
+                // while (std::getline(file, line)) {
+                //     if (file.eof())
+                //         content += line;
+                //     else
+                //         content += line + "\n";
+                // }
+                content = getContent(cgi_file, fd);
                 // print with bold green the value of WIFSIGNALED(status)
                 std::cout << "\033[1;38;5;82mWIFSIGNALED(status) : " << WIFSIGNALED(status) << " status : " << status << " \033[0m" << std::endl;
                 if (WIFSIGNALED(status) || status) {
@@ -77,16 +101,22 @@ int    get_method::get_mthod(int fd)
                     // print with bold red "CGI ERROR"
                     std::cout << "\033[1;38;5;9mCGI ERROR\033[0m" << std::endl;
                     fd_maps[fd].cgi_.is_error = 1;
-                    sendResponse(fd, content);
+                    cgi::sendResponse(fd, content, "500");
                     isfdclosed = true;
                     return 1;
                 }
                 else {
                     fd_maps[fd].cgi_.is_error = 0;
-                    sendResponse(fd, content);
+                    cgi::sendResponse(fd, content, "200");
                     isfdclosed = true;
                     return 1;
                 }
+            }
+            else if (end - fd_maps[fd].cgi_.start_time > 7) {
+                fd_maps[fd].cgi_.is_error = 1;
+                cgi::sendResponse(fd, "Gateway Timeout", "504");
+                isfdclosed = true;
+                return 1;
             }
             else {
                 it->second.rd_done = 0;

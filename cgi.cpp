@@ -89,14 +89,11 @@ void    cgi::checkifcgi(request& rq, int& iscgi, int fd) {
     }
 
     std::string file = std::string(it, path.end());
-    std::cout << "\033[1;38;5;82m'" << file << "'\033[0m" << std::endl;
-    std::cout << "\033[1;38;5;82m'" << file.substr(file.find_last_of(".") + 1) << "'\033[0m" << std::endl;
-    std::cout << "\033[1;38;5;82m'" << fd_maps[fd].requst.cgi_map.size() << "'\033[0m" << std::endl;
-
     if (fd_maps[fd].requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd].requst.cgi_map.end()) {
         iscgi = 1;
         stat_cgi = 1;
         compiler = fd_maps[fd].requst.cgi_map[file.substr(file.find_last_of(".") + 1)];
+        extension = file.substr(file.find_last_of(".") + 1);
         std::cout << "\033[1;38;5;82mTHIS IS CGI, yaaaY " << compiler << "\033[0m" << std::endl;
     }
 }
@@ -126,6 +123,7 @@ void    cgi::cgi_method(request& rq, int fd) {
     file_in = "/tmp/" + name + ".in";
     char **env = fillCgiEnv(fd);
     char **args = new char*[3];
+    start_time = time(NULL);
     clientPid = fork();
     if (clientPid == 0) {
         freopen(file_out.c_str(), "w", stdout);

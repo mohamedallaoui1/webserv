@@ -48,9 +48,10 @@ int            request::check_path_access(std::string path)
     return (0);
 }
 
-void            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
+int            request::parse_req(std::string   rq, server &server, int fd) // you can remove the server argenent
 {
-    parse_heade(rq, server, fd);
+    if (parse_heade(rq, server, fd) == 1)
+        return 1;
     std::map<int, Client>::iterator it = fd_maps.find(fd);
     int             state;
 
@@ -68,40 +69,41 @@ void            request::parse_req(std::string   rq, server &server, int fd) // 
         std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second.redirec_path + "\r\n\r\n";
         write(fd, msg.c_str(), msg.length());
         it->second.not_allow_method = 1;
-        return;
+        return 0;
     }
     if (vec.size() != 3 || last == std::string::npos)
     {
         state = it->second.resp.response_error("400", fd);    
         it->second.not_allow_method = 1;
-        return ;        
+        return 0;        
     }
     if (check_path_access(uri))
     {
         state = it->second.resp.response_error("403", fd);    
         it->second.not_allow_method = 1;
-        return ;        
+        return 0;        
     }
     if ((method.compare("DELETE") && method.compare("POST") && method.compare("GET")) || !method_state)
     {
         state = it->second.resp.response_error("405", fd);
         it->second.not_allow_method = 1;
-        return ;
+        return 0;
     }
     if (http_version.compare("HTTP/1.1"))
     {
         state = it->second.resp.response_error("505", fd);    
         it->second.not_allow_method = 1;
-        return ;
+        return 0;
     }
     if (!get_exten_type(uri).compare("Unsupported"))
     {
         state = it->second.resp.response_error("415", fd);
         it->second.not_allow_method = 1;
-        return ;
+        return 0;
     }
     (void)state;
     reset();
+    return 0;
 }
 
 std::string     request::find_longest_path(server &server, Client &obj)

@@ -80,7 +80,7 @@ int request::parseHost(std::string hst, int fd) {
     return (1);
 }
 
-void request::parse_heade(std::string buffer, server &serv, int fd)
+int request::parse_heade(std::string buffer, server &serv, int fd)
 {
     std::istringstream stream (buffer);
     std::string line;
@@ -88,6 +88,12 @@ void request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
+    if (buffer.find("Host") == std::string::npos) {
+        if (fd_maps[fd].resp.response_error("400", fd)) {
+            if (multplixing::close_fd(fd, fd_maps[fd].epoll_fd))
+                return 1;
+        }
+    }
     while (getline(stream, line))
     {
         if (line.find("\r") != std::string::npos)
@@ -101,8 +107,9 @@ void request::parse_heade(std::string buffer, server &serv, int fd)
         else if (line.substr(0, 4) == "Host")
             parseHost(line.substr(6), fd);
         if (line == "\r")
-            return ;
+            return 0;
     }
+    return 0;
 }
 
 void post::parse_header(std::string buffer, std::string &content_type, std::string &content_length, std::string &transfer_encoding)

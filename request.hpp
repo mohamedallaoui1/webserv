@@ -69,7 +69,7 @@ class request
         void                                      print_map(std::map<std::string, std::string> m);
         int                                       rewrite_location(std::map<std::string, std::string> location_map);
         void                                      fill_response_varbls(std::string &path);
-        void                                      parse_heade(std::string buffer, server &serv, int fd);
+        int                                      parse_heade(std::string buffer, server &serv, int fd);
         std::string                               get_delet_resp(std::string path, int stat);
         void                                      fill_extentions();
         std::streampos                            get_fileLenth(std::string path);
@@ -80,7 +80,7 @@ class request
         std::string                                get_full_uri( server &server, Client &obj);
         std::string                                find_longest_path(server &server, Client &obj);
         std::string                                delet_method(std::string path, server &server);
-        void                                       parse_req(std::string   rq, server &server, int fd);
+        int                                      parse_req(std::string   rq, server &server, int fd);
         int                                        one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods);
         int                                        parseHost(std::string hst, int fd);
         void                                       getServer(int fd);
