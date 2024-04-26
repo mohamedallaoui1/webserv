@@ -11,8 +11,10 @@ void sendResponse(int clientSocket, const std::string& response) {
     std::stringstream iss;
     iss << response.length();
     std::string responseLength = iss.str();
-
-    std::string httpResponse = "HTTP/1.1 200 OK\r\n";
+    std::string status = "200 OK";
+    if (fd_maps[clientSocket].cgi_.is_error)
+        status = "500 Internal Server Error";
+    std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
     httpResponse += "Content-Type: text/html\r\n";
     httpResponse += "Content-Length: " + responseLength + "\r\n";
     httpResponse += "\r\n";
@@ -58,23 +60,29 @@ int    get_method::get_mthod(int fd)
             int status;
             int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
             if (wait == fd_maps[fd].cgi_.clientPid) {
-                if (WIFSIGNALED(status)) {
-                    fd_maps[fd].resp.response_error("500", fd);
-                    multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+                std::ifstream file;
+                file.open(cgi_file.c_str());
+                std::string content;
+                std::string line;
+                while (std::getline(file, line)) {
+                    if (file.eof())
+                        content += line;
+                    else
+                        content += line + "\n";
+                }
+                // print with bold green the value of WIFSIGNALED(status)
+                std::cout << "\033[1;38;5;82mWIFSIGNALED(status) : " << WIFSIGNALED(status) << " status : " << status << " \033[0m" << std::endl;
+                if (WIFSIGNALED(status) || status) {
+                    // fd_maps[fd].resp.response_error("500", fd);
+                    // print with bold red "CGI ERROR"
+                    std::cout << "\033[1;38;5;9mCGI ERROR\033[0m" << std::endl;
+                    fd_maps[fd].cgi_.is_error = 1;
+                    sendResponse(fd, content);
                     isfdclosed = true;
                     return 1;
                 }
                 else {
-                    std::ifstream file;
-                    file.open(cgi_file.c_str());
-                    std::string content;
-                    std::string line;
-                    while (std::getline(file, line)) {
-                        if (file.eof())
-                            content += line;
-                        else
-                            content += line + "\n";
-                    }
+                    fd_maps[fd].cgi_.is_error = 0;
                     sendResponse(fd, content);
                     isfdclosed = true;
                     return 1;

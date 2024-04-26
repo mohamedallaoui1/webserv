@@ -35,6 +35,7 @@ class cgi
         std::string                         file_err;
         std::string                         file_in;
         pid_t                               clientPid;
+        int                                 is_error;
 
         // Envirement //
         std::string                         REQUEST_METHOD;
