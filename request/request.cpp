@@ -3,6 +3,7 @@
 #define MAX_PATH = 1000;
 extern std::map<int, Client> fd_maps;
 
+
 int               request::one_of_allowed(std::string mehod, std::vector<std::string> allowed_methods)
 {
     std::vector<std::string>::iterator it = allowed_methods.begin();

@@ -27,6 +27,8 @@
 # define BUFFER_SIZE 1024
 # define MAX_TIME 20
 
+extern int isfdclosed;
+
 class multplixing
 {
     private:

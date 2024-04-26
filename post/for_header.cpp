@@ -1,6 +1,5 @@
 #include "../request.hpp"
 #include "../post.hpp"
-#include "../request.hpp"
 #include "../multplixing.hpp"
 
 std::map<int, std::vector<server*>::iterator> server_history;
@@ -58,6 +57,8 @@ int request::parseHost(std::string hst, int fd) {
         // print with wave red "port is empty"
     std::cout << "\033[5m\033[38;5;208mPORT IS EMPTY: '" << port << "'\033[0m" << std::endl;
         it3->second.resp.response_error("400", fd);
+        multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+        isfdclosed = true;
     }
     std::vector<server *>::iterator it2;
     for (it2 = fd_maps[fd].serv_.s.begin(); it2 != fd_maps[fd].serv_.s.end(); it2++) {

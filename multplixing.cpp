@@ -5,6 +5,7 @@
 extern std::map<int, Client>  fd_maps; 
 extern std::map<int, std::vector<server*>::iterator> server_history;
 extern std::map<int, int> client_history;
+int isfdclosed;
 int flag = 0;
 
 
@@ -33,6 +34,7 @@ int        multplixing::close_fd(int fd, int epll)
 
     epoll_ctl(epll, EPOLL_CTL_DEL, fd , NULL);
     fd_maps.erase(fd_maps.find(fd));
+    std::cout << "THE VALUE OF FD:" << fd << std::endl;
     close(fd);
     // exit(120);
     return 1;
@@ -119,6 +121,7 @@ void        multplixing::lanch_server(server parse)
         for (int i = 0; i < num; i++) {
             is_cgi = 0;
             check_cgi = false;
+            isfdclosed = false;
             if ((it = std::find(serverSocket.begin(), serverSocket.end(), events[i].data.fd)) != serverSocket.end()) {
                 std::cout << "BEFORE CLIENT FD VALUE :" << events[i].data.fd << std::endl;
                 std::cout << "New Client Connected\n";
@@ -164,15 +167,18 @@ void        multplixing::lanch_server(server parse)
                        if (close_fd( events[i].data.fd, epoll_fd ))
                             continue ;
                     }
-                    std::cout << buffer << "\n";
+                    // std::cout << buffer << "\n";
 
                     if (flag == 0)
                     {
                         if (buffer.find("\r\n\r\n") != std::string::npos)
                         {
                             rq.parse_req(buffer, parse, events[i].data.fd );
+                            if (isfdclosed)
+                                continue;
                             fd_maps[events[i].data.fd].requst     = rq;
                             fd_maps[events[i].data.fd].resp       = resp_;
+                            // exit(0);
                             std::cout << " stat = " << it_fd->second.not_allow_method << "\n";
                             if (it_fd->second.not_allow_method)
                             {
@@ -214,6 +220,8 @@ void        multplixing::lanch_server(server parse)
                     respo = 0;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("GET"))
                         respo = (*it_fd).second.get.get_mthod(events[i].data.fd);
+                    if (isfdclosed)
+                        continue;
                     if (!fd_maps[events[i].data.fd].requst.method.compare("DELETE"))
                     {
                         std:: string res_delete = (*it_fd).second.delet.delet_method((*it_fd).second.requst.uri, (*it_fd).second.serv_, events[i].data.fd);

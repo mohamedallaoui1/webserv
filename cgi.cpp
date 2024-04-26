@@ -140,25 +140,6 @@ void    cgi::cgi_method(request& rq, int fd) {
         std::cerr << "\033[1;31mI AM IN THE CHILD PROCCESS\033[0m" << std::endl;
         kill(getpid(), 2);
     }
-    else {
-        int status;
-        // print "I AM WAITING FOR THE CHILD TO FINISH"
-        std::cerr << "I AM WAITING FOR THE CHILD TO FINISH" << std::endl;
-        int wait = waitpid(clientPid, &status, WNOHANG);
-        // print with rainbow color the value of wait + clientPid
-        std::cerr << "\033[1;35mwait return : " << wait << " clientPid : " << clientPid << "\033[0m" << std::endl;
-        if (wait == 0) {
-            // print with bold red "CHILD PROCCESS FINISHED"
-            std::cerr << "\033[1;31mCHILD " << WIFSIGNALED(status) << " PROCCESS FINISHED\033[0m" << std::endl;
-            // if (WIFSIGNALED(status)) {
-            // std::cerr << "\033[1;34mRESPONSE ERROR 500 wait return : " << wait << "\033[0m" << std::endl;
-            //     // print with bold blue "RESPONSE ERROR 500"
-            //     fd_maps[fd].resp.response_error("500", fd);
-            //     multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
-            // }
-        }
-    }
-    // print with yellow "-----------------------------------"
     std::cout << "\033[1;33m-----------------------------------\033[0m" << std::endl;
 }
 

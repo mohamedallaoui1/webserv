@@ -1,5 +1,6 @@
 #include "../get_method.hpp"
 #include "../Client.hpp"
+#include "../multplixing.hpp"
 
 extern std::map<int, Client> fd_maps;
 
@@ -37,34 +38,42 @@ int    get_method::get_mthod(int fd)
     }
     if (check_path == 1)
     {
-            if (fd_maps[fd].cgi_.stat_cgi) {
-                it->second.requst.uri = fd_maps[fd].cgi_.file_out;
+        if (fd_maps[fd].cgi_.stat_cgi) {
+            it->second.requst.uri = fd_maps[fd].cgi_.file_out; // 0000 update
+            int status;
+            int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
+            if (wait == fd_maps[fd].cgi_.clientPid) {
+                if (WIFSIGNALED(status)) {
+                    fd_maps[fd].resp.response_error("500", fd);
+                    multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+                    isfdclosed = true;
+                    return 1;
+                }
             }
-            if (!it->second.res_header)
+            else {
+                it->second.rd_done = 0;
+                std::cerr << "\033[1;31mCHILD " << wait << " PROCCESS FINISHED\033[0m" << std::endl;
+                exit(23);
+                return 0;
+            }
+        }
+        if (!it->second.res_header) {
+            response = it->second.resp.get_header("200", extention_type, StringSize.str(), it->second);
+            it->second.read_f.open(it->second.requst.uri.c_str());
+            send(fd, response.c_str(), response.size(), 0);
+        }
+        else
+        {
+            char    buff[1024];
+            int     x = it->second.read_f.read(buff, 1024).gcount();
+            if (it->second.read_f.gcount() > 0)
+                send(fd, buff, x, 0);
+            if (it->second.read_f.eof() || it->second.read_f.gcount() < 1024)
             {
-                // std::cout << " File Case " << "\n";
-                // std::cout << "Before ResPonse <<-->> " << response << "\n";
-                
-                char            buff[1024];
-                response = it->second.resp.get_header("200", extention_type, StringSize.str(), it->second);
-                // std::cout << "After ResPonse <<-->> " << response << "\n";
-                it->second.read_f.open(it->second.requst.uri.c_str());
-                it->second.read_f.read(buff, 1024).gcount();
-                send(fd, (response + std::string(buff)).c_str(), (response + std::string(buff)).size(), 0);
                 it->second.rd_done = 1;
                 return 1;
             }
-            // else
-            // {
-                // int     x = it->second.read_f.read(buff, 1024).gcount();
-            //     if (it->second.read_f.gcount() > 0)
-            //         send(fd, buff, x, 0);
-            //     if (it->second.read_f.eof() || it->second.read_f.gcount() < 1024)
-            //     {
-            //         it->second.rd_done = 1;
-            //         return 1;
-            //     }
-            // }
+        }
         // }
         // else if(it->second.requst.x_cgi && it->second.requst.stat_cgi == "on")
         // {
@@ -106,8 +115,16 @@ int    get_method::get_mthod(int fd)
         // std::cout << " Error Case " << "\n";
         if (check_path == 3) // permission
             err_stat = it->second.resp.response_error("403", fd);
-        else                 // exist
-            err_stat = it->second.resp.response_error("404", fd);
+        
+        std::cout << "hhhhhhhh : '" << it->second.requst.uri.c_str() << "'" << std::endl;
+        std::ifstream   red(it->second.requst.uri.c_str());
+        char    buff[1024];
+        memset(buff,0,1024);
+        red.read(buff, 1024).gcount();
+        std::cout << "buff = " << buff << "\n";
+        if (access(it->second.requst.uri.c_str(), F_OK) < 0)
+             err_stat = it->second.resp.response_error("404", fd);
+        // else                 // exist
         if (err_stat)
             return 1;
     }
