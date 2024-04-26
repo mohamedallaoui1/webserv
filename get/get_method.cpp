@@ -7,6 +7,21 @@ extern std::map<int, Client> fd_maps;
 get_method::get_method(){
 }
 
+void sendResponse(int clientSocket, const std::string& response) {
+    std::stringstream iss;
+    iss << response.length();
+    std::string responseLength = iss.str();
+
+    std::string httpResponse = "HTTP/1.1 200 OK\r\n";
+    httpResponse += "Content-Type: text/html\r\n";
+    httpResponse += "Content-Length: " + responseLength + "\r\n";
+    httpResponse += "\r\n";
+    httpResponse += response;
+
+    send(clientSocket, httpResponse.c_str(), httpResponse.length(), 0);
+    multplixing::close_fd(clientSocket, fd_maps[clientSocket].epoll_fd);
+}
+
 int    get_method::get_mthod(int fd)
 {
     std::map<int, Client>::iterator it = fd_maps.find(fd);
@@ -39,7 +54,7 @@ int    get_method::get_mthod(int fd)
     if (check_path == 1)
     {
         if (fd_maps[fd].cgi_.stat_cgi) {
-            it->second.requst.uri = fd_maps[fd].cgi_.file_out; // 0000 update
+            std::string cgi_file = fd_maps[fd].cgi_.file_out; // 0000 update
             int status;
             int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
             if (wait == fd_maps[fd].cgi_.clientPid) {
@@ -49,11 +64,24 @@ int    get_method::get_mthod(int fd)
                     isfdclosed = true;
                     return 1;
                 }
+                else {
+                    std::ifstream file;
+                    file.open(cgi_file.c_str());
+                    std::string content;
+                    std::string line;
+                    while (std::getline(file, line)) {
+                        if (file.eof())
+                            content += line;
+                        else
+                            content += line + "\n";
+                    }
+                    sendResponse(fd, content);
+                    isfdclosed = true;
+                    return 1;
+                }
             }
             else {
                 it->second.rd_done = 0;
-                std::cerr << "\033[1;31mCHILD " << wait << " PROCCESS FINISHED\033[0m" << std::endl;
-                exit(23);
                 return 0;
             }
         }

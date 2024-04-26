@@ -123,14 +123,13 @@ void    cgi::cgi_method(request& rq, int fd) {
     std::string name;
     iss >> name;
     file_out ="/tmp/" + name;
-    file_err = "/tmp/" + name + ".err";
     file_in = "/tmp/" + name + ".in";
     char **env = fillCgiEnv(fd);
     char **args = new char*[3];
     clientPid = fork();
     if (clientPid == 0) {
         freopen(file_out.c_str(), "w", stdout);
-        freopen(file_err.c_str(), "w", stderr);
+        freopen(file_out.c_str(), "w", stderr);
         freopen(file_in.c_str(), "r", stdin);
         // print with bold red "I AM IN THE CHILD PROCCESS"
         args[0] = strdup(compiler.c_str());
