@@ -30,7 +30,7 @@ class cgi
         void                                checkifcgi(request& rq, int& iscgi, int fd);
         void                                cgi_method(request& rq, int fd);
         char **                             fillCgiEnv(int fd);
-        static void                                sendResponse(int clientSocket, const std::string& response, std::string status);
+        static void                                sendResponse(int clientSocket, std::string& response, std::string status);
         std::string                         cgi_stat;
         std::string                         compiler;
         std::string                         file_out;

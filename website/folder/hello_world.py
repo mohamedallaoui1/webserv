@@ -1,3 +1,6 @@
-#!/usr/bin/env python3
-
-print("<h1>CGI IS WORKING !!!</h1>")
+#!/usr/bin/env python
+import cgi
+while 1:
+    a = "n"
+print("Content-type: text/html\n")
+print("<html><head><title>CGI POST Test</title></head><body>")

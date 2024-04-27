@@ -8,24 +8,6 @@ extern std::map<int, Client> fd_maps;
 get_method::get_method(){
 }
 
-void cgi::sendResponse(int clientSocket, const std::string& response, std::string status) {
-    std::stringstream iss;
-    iss << response.length();
-    std::string responseLength = iss.str();
-    status = "200 OK";
-    if (fd_maps[clientSocket].cgi_.is_error)
-        status = "500 Internal Server Error";
-        // response = getErrorPage(fd);
-    std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
-    httpResponse += "Content-Type: text/html\r\n";
-    httpResponse += "Content-Length: " + responseLength + "\r\n";
-    httpResponse += "\r\n";
-    httpResponse += response;
-
-    send(clientSocket, httpResponse.c_str(), httpResponse.length(), 0);
-    multplixing::close_fd(clientSocket, fd_maps[clientSocket].epoll_fd);
-}
-
 std::string getContent (std::string file, int fd) {
     std::string content;
     std::ifstream fileStream;
@@ -45,6 +27,51 @@ std::string getContent (std::string file, int fd) {
     }
     return content;
 }
+
+std::string getErrorPage(int fd, std::string stat, std::string& status, std::string& contenttype) {
+    if (stat == "500")
+        status = "500 Internal Server Error";
+    else if (stat == "504")
+        status = "504 Gateway Timeout";
+    std::cout << "\033[1;32m test:::: " << stat  << " " << fd_maps[fd].serv_.err_page[stat] << "\033[0m" << std::endl;
+    if (fd_maps[fd].serv_.err_page.find(stat) != fd_maps[fd].serv_.err_page.end()) {
+        contenttype = fd_maps[fd].requst.extentions[fd_maps[fd].serv_.err_page[stat].substr(fd_maps[fd].serv_.err_page[stat].find_last_of(".") + 1)];
+        return getContent(fd_maps[fd].serv_.err_page[stat], fd);
+    }
+    else {
+        contenttype = "text/html";
+        if (stat == "500")
+            return "500 Internal Server Error";
+        else if (stat == "504")
+            return "504 Gateway Timeout";
+    }
+    return "";
+}
+
+void cgi::sendResponse(int fd, std::string& response, std::string stat) {
+    std::stringstream iss;
+    std::string contenttype;
+    std::string status = "200 OK";
+    if (fd_maps[fd].cgi_.is_error) {
+        response = getErrorPage(fd, stat, status, contenttype);
+    }
+    // print with vold green the value of status
+    // std::cout << "\033[1;32m test::::" << status << "\033[0m" << std::endl;
+    iss << response.length();
+    std::string responseLength = iss.str();
+    std::string httpResponse = "HTTP/1.1 " + status + "\r\n";
+    httpResponse += "Content-Type: " + contenttype + "\r\n";
+    httpResponse += "Content-Length: " + responseLength + "\r\n";
+    httpResponse += "\r\n";
+    httpResponse += response;
+
+    // std::cout << httpResponse << std::endl;
+
+    send(fd, httpResponse.c_str(), httpResponse.length(), 0);
+    multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
+}
+
+
 
 int    get_method::get_mthod(int fd)
 {
@@ -83,23 +110,9 @@ int    get_method::get_mthod(int fd)
             int status;
             int wait = waitpid(fd_maps[fd].cgi_.clientPid, &status, WNOHANG);
             if (wait == fd_maps[fd].cgi_.clientPid) {
-                // std::ifstream file;
-                // file.open(cgi_file.c_str());
                 std::string content;
-                // std::string line;
-                // while (std::getline(file, line)) {
-                //     if (file.eof())
-                //         content += line;
-                //     else
-                //         content += line + "\n";
-                // }
                 content = getContent(cgi_file, fd);
-                // print with bold green the value of WIFSIGNALED(status)
-                std::cout << "\033[1;38;5;82mWIFSIGNALED(status) : " << WIFSIGNALED(status) << " status : " << status << " \033[0m" << std::endl;
                 if (WIFSIGNALED(status) || status) {
-                    // fd_maps[fd].resp.response_error("500", fd);
-                    // print with bold red "CGI ERROR"
-                    std::cout << "\033[1;38;5;9mCGI ERROR\033[0m" << std::endl;
                     fd_maps[fd].cgi_.is_error = 1;
                     cgi::sendResponse(fd, content, "500");
                     isfdclosed = true;
@@ -114,7 +127,11 @@ int    get_method::get_mthod(int fd)
             }
             else if (end - fd_maps[fd].cgi_.start_time > 7) {
                 fd_maps[fd].cgi_.is_error = 1;
-                cgi::sendResponse(fd, "Gateway Timeout", "504");
+                std::string timeout = "GATEWAY TIMEOUT";
+                std::cout << "\033[1;34m" << fd_maps[fd].cgi_.clientPid << "\033[0m" << std::endl;
+                kill(fd_maps[fd].cgi_.clientPid, 9);
+                waitpid(fd_maps[fd].cgi_.clientPid, NULL, 0);
+                cgi::sendResponse(fd, timeout, "504");
                 isfdclosed = true;
                 return 1;
             }
@@ -363,4 +380,3 @@ int     get_method::check_exist(const std::string& path)
     }
     return 0; // Path does not exist
 }
-

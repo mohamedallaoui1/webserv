@@ -4,6 +4,6 @@
         <title>PHP Test</title>
     </head>
     <body>
-        <?php echo '<p>Hello World</p>fdfdfdfdf'; iysfhgafsfsff?>
+    <?php echo "Hello, World!";?>
     </body>
 </html>
