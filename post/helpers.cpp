@@ -1,14 +1,14 @@
-#include "../post.hpp"
+#include "../Client.hpp"
 
 void post::print_keyVal(map m)
 {
     map::iterator it = m.begin();
     while (it != m.end())
     {
-        std::cout << it->first << ":" << it->second << std::endl;
+        // std::cout << it->first << ":" << it->second << std::endl;
         it++;
     }
-    std::cout << "\n";
+    // std::cout << "\n";
 }
 
 std::string post::generateUniqueFilename()

@@ -1,4 +1,4 @@
-#include "../post.hpp"
+#include "../Client.hpp"
 
 map post::read_file_extensions(const char *filename)
 {

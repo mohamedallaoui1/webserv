@@ -37,6 +37,7 @@ class Client
         int                                 version_not_suported;
         int                                 file_not_supported;
         std::streampos                      filePosition;
+        int                                 is_cgi;
         get_method                          get;
         request                             requst;
         response                            resp;
@@ -45,6 +46,8 @@ class Client
         delete_                             delet;
         cgi                                 cgi_;
         time_t                              start_time;
+        int                                 flagg;
+        bool                                istimeout;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

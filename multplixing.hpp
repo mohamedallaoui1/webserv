@@ -27,11 +27,6 @@
 # define BUFFER_SIZE 1024
 # define MAX_TIME 20
 
-// struct garbage_s {
-//     void *ptr;
-//     garbage_s* next;
-// }
-
 extern int isfdclosed;
 
 class multplixing

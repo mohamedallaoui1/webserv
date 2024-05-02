@@ -1,14 +1,18 @@
-printf "DELETE /../../../../../../../ HTTP/1.1\r\n\r\n" | nc 127.0.0.1 8080 kat m7i sesion kamla
 
-printf "DELETE / HTTP/1.1\r\ncontent-ttype: \r\n\r\n" | nc 127.0.0.1 8080 imfinit loop
+"GET / HTTP/1.1\r\n\r\n" | nc 127.0.0.1 8080 must work ??
 
-"GET / HTTP/1.1\r\n\r" | nc 127.0.0.1 8080 lopp infini
-
-"1 GET / HTTP/1.1\r\n\r" should make sure that the fisrt line hase 3 parameters fisrt
-
-GET\r\n\rn => segfult
+should work even req does'nt include headers.
 
 gado time out
 
-// SEGV when i send req without a body in the iterator that alloui send printf "GET / HTTP/1.1\r\n\r\n" | nc 127.0.0.1 8080
+print "GET / HTTP/1.1\r\nHost: localhost:955456545456454\r\n\r\n" | nc 127.0.0.1 8080
+HTTP/1.1 200 OK
+Content-Type: text/html
+Content-Length: 522
+should not be valid allooui handle
 
+print "GET / HTTP/1.1 Host: localhost:0\r\n\r\n" | nc 127.0.0.1 8080 
+segve
+
+print "GET / HTTP/1.1\r\nHost: :gfgfg::8080\r\n\r\n" | nc 127.0.0.1 8080
+hadi kat 5dam

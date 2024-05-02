@@ -2,6 +2,8 @@
 #include "../request.hpp"
 #include "../get_method.hpp"
 
+extern std::map<int, Client> fd_maps;
+
 Client::Client(std::string uri_)
 {
     stor_uri             = uri_;
@@ -41,6 +43,9 @@ Client&         Client::operator=(const Client& copy)
 Client::~Client()
 {
     // std::cout<<"================CLIENT dESTOR================\n";
+    kill(cgi_.clientPid, 9);
+    waitpid(cgi_.clientPid, NULL, 0);
+    unlink(cgi_.file_out.c_str());
 }
 
 Client::Client()

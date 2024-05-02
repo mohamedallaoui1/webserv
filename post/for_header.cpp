@@ -1,5 +1,5 @@
 #include "../request.hpp"
-#include "../post.hpp"
+#include "../Client.hpp"
 #include "../multplixing.hpp"
 
 std::map<int, std::vector<server*>::iterator> server_history;
@@ -49,13 +49,12 @@ int request::parseHost(std::string hst, int fd) {
     incoming_ip = (*it)->cont["host"];
     int is_servername = 0;
     // print with vold green the value of hst
-    std::cout << "\033[1;38;5;82mSERVER NAME IS: '" << hst << "'\033[0m" << std::endl;
     ip = hst.substr(0, hst.find(':'));
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
+    if ((server::check_ip(ip) || server::valid_range(port)) && !is_servername)
+        it3->second.resp.response_error("400", fd);
     if (port == "" || hst.find_first_of(':') == std::string::npos) {
-        // print with wave red "port is empty"
-    std::cout << "\033[5m\033[38;5;208mPORT IS EMPTY: '" << port << "'\033[0m" << std::endl;
         it3->second.resp.response_error("400", fd);
         multplixing::close_fd(fd, fd_maps[fd].epoll_fd);
         isfdclosed = true;
@@ -90,6 +89,7 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     path   = vec[1];
     if (buffer.find("Host") == std::string::npos) {
         if (fd_maps[fd].resp.response_error("400", fd)) {
+            std::cout << "22222222222222222222\n";
             if (multplixing::close_fd(fd, fd_maps[fd].epoll_fd))
                 return 1;
         }
@@ -112,9 +112,9 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     return 0;
 }
 
-void post::parse_header(std::string buffer, std::string &content_type, std::string &content_length, std::string &transfer_encoding)
+void post::parse_header(std::string buffer)
 {
-    int g = 0;
+    int t = 0;
     std::istringstream stream (buffer);
     std::string line;
     while (getline(stream, line))
@@ -123,14 +123,16 @@ void post::parse_header(std::string buffer, std::string &content_type, std::stri
             line.erase(line.find("\r"));
         if (line.substr(0, 14) == "Content-Length")
             content_length = line.substr(16);
-        else if (line.substr(0, 12) == "Content-Type" && g == 0)
+        else if (line.substr(0, 12) == "Content-Type" && t == 0)
         {
             content_type = line.substr(14);
-            // std::cout << "ssssssssssssssss: " << content_type << std::endl;
-            g = 1;
+            t = 1;
         }
         else if (line.substr(0, 17) == "Transfer-Encoding")
+        {
             transfer_encoding = line.substr(19);
+            g = 10;
+        }
         if (line == "\r")
             return ;
     }

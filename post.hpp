@@ -29,25 +29,30 @@ class post
 private:
 
 public:
+    std::string transfer_encoding;
+    std::string content_length;
+    std::string content_type;
+    int g;
+    int j;
 	post();
 	post(const post &other);
 	post &operator=(const post &other);
 	~post();
-    int j;
     std::string generateUniqueFilename();
     void print_keyVal(map m);
     map read_file_extensions(const char *filename);
-    void parse_header(std::string buffer, std::string &content_type, std::string &content_length, std::string &transfer_encoding);
+    void parse_header(std::string buffer);
     void PutBodyInFile(std::string buffer, std::string extension);
-    bool post_method(std::string buffer);
-    bool binary(std::string buffer);
-    bool chunked(std::string buffer);
+    bool post_method(std::string buffer, int fd);
+    bool binary(std::string buffer, std::string max_body_size, std::string upload_path);
+    bool chunked(std::string buffer, std::string max_body_size, std::string upload_path);
     bool extension_founded(std::string contentType);
     void parse_hexa(std::string &remain);
-    bool is_end_of_chunk();
+    bool is_end_of_chunk(std::string max_body_size, std::string upload_path);
     bool boundary(std::string buffer);
     std::string parse_boundary_header(std::string buffer);
     std::string cat_header(std::string buffer);
+    bool containsValidCharacters(const std::string& str);
 };
 
 

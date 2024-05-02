@@ -60,21 +60,21 @@ class server : public location
         int                                 check_stat(std::string &stat_error);
         void                                mange_file(const char* file);
         void                                handle_err(const std::string  file);
-        std::string                         strtrim(std::string &str);
+        static std::string                         strtrim(std::string &str);
         void                                print_err(std::string str);
-        std::vector<std::string>            isolate_str(std::string s, char deli);
+        static std::vector<std::string>            isolate_str(std::string s, char deli);
         void                                stor_values(std::vector<std::string> s, char ch);
         void                                free_l(std::vector<location*> &lv);
         int                                 parse_loca(std::ifstream& rd_cont, std::string &str_);
         int                                 parse_both(std::ifstream& rd_cont, std::string &str_);
         void                                check_size(std::vector<std::string> &s, char c);
         void                                handl_serv(std::vector<std::string> s);
-        int                                 is_num(std::string s);
-        int                                 valid_range(std::string s);
+        static int                                 is_num(std::string s);
+        static int                                 valid_range(std::string s);
         int                                 check_permi(std::string path);
         int                                 check_exist(std::string path);
-        int                                 check_ip_nbr(std::string nbr);
-        int                                 check_ip(std::string ip);
+        static int                                 check_ip_nbr(std::string nbr);
+        static int                                 check_ip(std::string ip);
         server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_);   
         server();
 
