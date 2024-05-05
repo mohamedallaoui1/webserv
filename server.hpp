@@ -52,6 +52,8 @@ class server : public location
         std::vector<std::string>            vec_of_locations;
         std::vector<std::string>            p_s_id;
 
+        void                                check_coment(const char* file_);
+        void                                check_empty(const char* rd_content);
         std::string                         controle_slash(std::string direc);
         void                                check_duplicate_location(std::vector<std::string> s);
         void                                check_server_deplicate();
@@ -75,7 +77,7 @@ class server : public location
         int                                 check_exist(std::string path);
         static int                                 check_ip_nbr(std::string nbr);
         static int                                 check_ip(std::string ip);
-        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_);   
+        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &error);   
         server();
 
 

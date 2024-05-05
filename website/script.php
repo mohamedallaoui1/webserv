@@ -1,11 +1,7 @@
-<?php
-// Set the content type header to indicate that the response is an image
-header('Content-Type: image/jpeg');
 
-<<<<<<< HEAD
 <!DOCTYPE html> 
 <?php 
-    setcookie("3allawi", "test", time() + 2 * 24 * 60 * 60); 
+    setcookie("user:", "mallaoui", time() + 2 * 24 * 60 * 60); 
 ?> 
 <html> 
 <body> 
@@ -20,12 +16,16 @@ header('Content-Type: image/jpeg');
   
 </body> 
 </html>
-=======
+
+
+<!-- <?php
+// Set the content type header to indicate that the response is an image
+// header('Content-Type: image/jpeg');
+
 // // Path to the image file
-$imagePath = '/nfs/homes/ayylaaba/Desktop/last_update6/website/img/admin.jpeg';
+// $imagePath = '/nfs/homes/ayylaaba/Desktop/last_update6/website/img/admin.jpeg';
 
 // // Output the image file
-readfile($imagePath);
-echo "hello"
-?>
->>>>>>> b52da9f07f97d5e13b410aa981028c4051d46904
+// readfile($imagePath);
+// echo "hello"
+?> -->

@@ -51,7 +51,10 @@ Client::~Client()
 Client::Client()
 {
     // std::cout<<"-----------------new Client-----------------\n";
+    join_readbytes      = 0;
+    buf                 = "";
     res_header          = 0;
+    is_cgi              = 0;
     rd_done             = 0;
     u_can_send          = 0;
     res_sent            = 0;

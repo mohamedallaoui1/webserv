@@ -60,9 +60,9 @@ class request
         std::map<std::string, std::string>  root_map;
         std::map<std::string, std::string>  response_message;
         std::vector<server*>::iterator      it;
+        std::map<std::string, std::string>  map_error;
 
         /*************** REQUEST FUNCTIONS ***************/
-
         int                                       check_path_access(std::string path);
         int                                       check_cgi_exten(std::string exten);
         void                                      reset();

@@ -24,6 +24,8 @@ class response;
 class Client
 {
     public:
+        std::string                         buf;
+        int                                 join_readbytes;
         int                                 epoll_fd;
         std::map<std::string, std::string>  response_message;
         int                                 res_header;
@@ -39,7 +41,7 @@ class Client
         std::streampos                      filePosition;
         int                                 is_cgi;
         get_method                          get;
-        request                             requst;
+        request                             *requst;
         response                            resp;
         post                                post_;
         server                              serv_;
@@ -47,7 +49,6 @@ class Client
         cgi                                 cgi_;
         time_t                              start_time;
         int                                 flagg;
-        bool                                istimeout;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

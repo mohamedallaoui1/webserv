@@ -1,7 +1,7 @@
 #include "../request.hpp"
 #include "../Client.hpp"
 
-extern std::map<int, Client> fd_maps;
+extern std::map<int, Client *> fd_maps;
 
 response::response()
 {
@@ -16,27 +16,30 @@ int     response::response_error(std::string stat, int fd)
         //  // std::cout << "\t------------------- BEGIN response_error ---------------\t"<< std::endl;
         std::string response;
         std::stringstream size;
-        std::map<int, Client>::iterator it = fd_maps.find(fd);
-        std::map<std::string, std::string>::iterator it_ = it->second.serv_.err_page.find(stat);
-        
+        std::map<int, Client *>::iterator it = fd_maps.find(fd);
+        std::cout << "THE SERVER IS : " << (*fd_maps[fd]->requst->it)->cont["server_name"] << std::endl;
+        // std::map<std::string, std::string>::iterator it_ = (*it->second->requst.it)->err_page.find(stat);
+        std::map<std::string, std::string>::iterator it_ = it->second->requst->map_error.find(stat);
         // // std::cout << RED << "state = " << stat << RESET << "\n";
 
-        if( it_ != it->second.serv_.err_page.end())
+        if( it_ != (*fd_maps[fd]->requst->it)->err_page.end())
         {
             // // std::cout << "stat " <<  it_->first << " Path " << it_->second << "\n";
             // // std::cout << "Stat  File Found=  " << stat << "\n";
             std::fstream    err_file;
+            // print the it_->second
+            std::cout << it_->second << "hhhhhhhhhh\n";
             err_file.open(it_->second.c_str());
             char            buff_[1024];
             bzero(buff_, 1024);
             err_file.read(buff_, 1024).gcount();
             response = buff_;
             size << response.size();
-            response = get_header(stat, "text/html", size.str(), it->second);
-            response += it->second.get.to_string(buff_);
+            response = get_header(stat, "image/jpeg", size.str(), *it->second);
+            response += it->second->get.to_string(buff_);
             // // std::cout << "response -> " << response << " <-\n";
             send(fd, response.c_str(), response.size(), 0);
-            it->second.rd_done = 1;
+            it->second->rd_done = 1;
             return (1);
         }
         else
@@ -52,11 +55,11 @@ int     response::response_error(std::string stat, int fd)
             _respond_stat += "<html><head><title> " + it_message_error->second + "</title></head>";
             _respond_stat +=  "<body> <strong>" + it_message_error->second + " </strong></body></html>";
             size << _respond_stat.size();
-            response = get_header(stat, "text/html", size.str(), it->second);
+            response = get_header(stat, "text/html; charset=UTF-8", size.str(), *it->second);
             // std::cout << "*********************************************************** " << response.size() << "\n";
             response += _respond_stat;
             send(fd, response.c_str(), response.size(), 0);
-            it->second.rd_done = 1;
+            it->second->rd_done = 1;
             return (1);
         }
         return (0);
@@ -107,7 +110,7 @@ std::string      response::get_header(std::string wich, std::string exten, std::
         }
         else if (a == 301)
         {
-            if (fd_inf.requst.redirection_stat)
+            if (fd_inf.requst->redirection_stat)
             {
                 std::string     path_with_slash = fd_inf.redirec_path;
                 response = "HTTP/1.1 301 Moved Permanently\r\n";
@@ -118,7 +121,7 @@ std::string      response::get_header(std::string wich, std::string exten, std::
             }
             else
             {
-                std::string     path_with_slash = fd_inf.requst.path + "/";
+                std::string     path_with_slash = fd_inf.requst->path + "/";
                 // // std::cout << " 301 fd_inf.requst.path <<=== " << fd_inf.requst.path << "\n";
                 // // std::cout << " 301 path <<=== " << path_with_slash << "\n";
                 response = "HTTP/1.1 301 Moved Permanently\r\n";

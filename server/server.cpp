@@ -1,5 +1,4 @@
 #include "../server.hpp"
-#include "../multplixing.hpp"
 #define CYAN    "\033[36m"
 #define RESET   "\033[0m"
 
@@ -19,8 +18,10 @@ server::server()
     message_response_stat();
 }
 
-server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_)
+server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &error)
 {
+    err_page = error;
+    max_body = max_bdy;
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
@@ -91,12 +92,45 @@ void        server::check_duplicate_location(std::vector<std::string> s)
     }
 }
 
+void        server::check_coment(const char* file_)
+{
+    std::string str;
+    std::ifstream new_red(file_);
+
+    while (std::getline(new_red, str))
+    {
+        if (str[0] != '#')
+            return ;
+    }
+    if (new_red.eof())
+        print_err("Empty File");
+}
+
+void        server::check_empty(const char* file_)
+{
+    std::ifstream new_red(file_);
+
+    // read a character
+    char c;
+    std::string str;
+    new_red.read(&c, 1);
+    if (new_red.eof())
+        print_err("Empty File");
+    while (std::getline(new_red, str))
+    {
+        if (str[0] != '#' && !isWhitespace(str))
+            return ;
+    }
+    if (new_red.eof())
+        print_err("Empty File");
+}
 void        server::mange_file(const char* file)
 {
     std::ifstream   rd_content(file);
     s_token = 0;
     obj.l_token = 0;
-
+    check_empty(file);
+    check_coment(file);
     while (std::getline(rd_content, str)) // loop to get lines
     {
         str = strtrim(str);
@@ -111,15 +145,24 @@ void        server::mange_file(const char* file)
             s_token++;
             int g = parse_both(rd_content, str);
             // parse_both(rd_content,str);
-            if (/*(!str.compare("}") && s_token == 1)*/ (g == 2 && s_token == 2))
+            if ((g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
-                server *new_s = new server(cont, l, vec_of_locations);
+
+                if (atoi(max_body.c_str()) < 0)
+                    max_body = "2147483647"; // ask later
+                std::map<std::string, std::string>::iterator it = err_page.begin();
+                for (; it != err_page.end(); it++)
+                {
+                    std::cout << it->first << "///////////////// " << it->second << std::endl;
+                }
+                server *new_s = new server(cont, l, vec_of_locations, max_body, err_page);
                 s.push_back(new_s);
                 garbage.push_back(new_s);
                 cont.clear();
                 l.clear();
                 vec_of_locations.clear();
+                err_page.clear();
                 s_token = 0;
             }
         }
@@ -315,7 +358,10 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
             if (!s_vec[0].compare("error_page"))
             {
                 if (check_exist(s_vec[2]) && !check_stat(s_vec[1])) // check also stat lik 404 301 ...
+                {
+                    std::cout << "error_page = " << s_vec[1] << " " << s_vec[2] << "\n";
                     err_page[s_vec[1]] = s_vec[2];
+                }
                 else
                     print_err("syntaxt_error on the error_page");
             }
@@ -480,9 +526,15 @@ void        server::stor_values(std::vector<std::string> s, char ch)
         else if (!s[0].compare("autoindex"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());
         else if (!s[0].compare("upload"))
+        {
             cont_l[s[0]] = s[1].substr(0, s[1].size());
+            std::cout << "server upload = " << s[1].substr(0, s[1].size()) << "\n";
+        }
         else if (!s[0].compare("upload_path"))
+        {
             cont_l[s[0]] = controle_slash(s[1].substr(0, s[1].size()));
+            std::cout << "server upload_path = " << controle_slash(s[1].substr(0, s[1].size())) << "\n";
+        }
         else if (!s[0].compare("cgi_status"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());
     }

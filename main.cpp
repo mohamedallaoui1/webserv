@@ -10,7 +10,6 @@ size_t MAX_CLIENTS = 10;
 int main(int ac, char **av) 
 {
     server              parse;
-    request             rq;
     multplixing         mlp;
 
     if (ac < 2)

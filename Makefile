@@ -2,7 +2,7 @@ NAME = webserv
 
 CXX = c++
 
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 #-fsanitize=address -g3
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -fsanitize=address -g3
 
 SRCS = 	main.cpp \
 		cgi.cpp \
@@ -28,7 +28,7 @@ ${NAME} : ${OBJ}
 	$(CXX) $(CXXFLAGS) $(OBJ) -o $(NAME)
 
 clean :
-	rm -f ${OBJ} /nfs/homes/mhassani/Desktop/webserv/website/folder/outfile*
+	rm -f ${OBJ}
 
 fclean : clean
 	rm -f ${NAME}

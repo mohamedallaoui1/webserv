@@ -50,6 +50,7 @@ class cgi
         std::string                         SCRIPT_FILENAME;
         std::string                         REDIRECT_STATUS;
         std::string                         SERVER_PORT;
+        std::string                         HTTP_COOKIE;
 
         // ---------- //
         
