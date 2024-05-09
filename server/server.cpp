@@ -1,4 +1,4 @@
-#include "../server.hpp"
+#include "../headers/server.hpp"
 #define CYAN    "\033[36m"
 #define RESET   "\033[0m"
 
@@ -7,7 +7,7 @@ extern std::vector<void *> garbage;
 
 server::server()
 {
-    max_body = "2147483647";
+    max_body = "9223372036854775807";
     duplicate["index"]          = 0;
     duplicate["root"]           = 0;
     duplicate["allow_methods"]  = 0;
@@ -18,13 +18,23 @@ server::server()
     message_response_stat();
 }
 
-server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &error)
+server::server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &err)
 {
-    err_page = error;
+    err_page = err;
     max_body = max_bdy;
     cont = cont_s;
     l = l_;
     vec_of_locations = vec_of_locations_;
+}
+
+int         server::check_forbidden(std::string path_)
+{
+    for (size_t i = 0; i < path_.size(); i++) // {}|\\^~[]`" 
+    {
+       if (path_[i] == '[' || path_[i] == ']' || path_[i] == '{' || path_[i] == '}' || path_[i] == '\\' || path_[i] == '^' || path_[i] == '~' || path_[i] == '`')
+            return 1;
+    }
+    return 0;
 }
 
 std::string     server::strtrim(std::string &str)
@@ -43,8 +53,8 @@ std::string     server::strtrim(std::string &str)
 
 void            server::print_err(std::string str)
 {
-    std::cout << str << std::endl;
-    exit(1);
+    std::cerr << str << std::endl;
+    exit(EXIT_FAILURE);
 }
 
 std::vector<std::string>    server::isolate_str(std::string s, char deli)
@@ -148,21 +158,14 @@ void        server::mange_file(const char* file)
             if ((g == 2 && s_token == 2))
             {
                 check_duplicate_location(vec_of_locations);
-
-                if (atoi(max_body.c_str()) < 0)
-                    max_body = "2147483647"; // ask later
-                std::map<std::string, std::string>::iterator it = err_page.begin();
-                for (; it != err_page.end(); it++)
-                {
-                    std::cout << it->first << "///////////////// " << it->second << std::endl;
-                }
+                // if (atol(max_body.c_str()) < 0)
+                //     max_body = "2147483647"; // ask later
                 server *new_s = new server(cont, l, vec_of_locations, max_body, err_page);
                 s.push_back(new_s);
                 garbage.push_back(new_s);
                 cont.clear();
                 l.clear();
                 vec_of_locations.clear();
-                err_page.clear();
                 s_token = 0;
             }
         }
@@ -173,22 +176,22 @@ void        server::mange_file(const char* file)
 void           server::message_response_stat()
 {
         response_message["200"] = "OK";
-        // response_message["201"] = "Created";
-        // response_message["202"] = "Accepted";
+        response_message["201"] = "Created";
+        response_message["202"] = "Accepted";
         response_message["204"] = "No Content";
         response_message["301"] = "Moved Permanently";
         response_message["408"] = "Request Timeout";
-        // response_message["302"] = "Found";
-        // response_message["304"] = "Not Modified";
+        response_message["302"] = "Found";
+        response_message["304"] = "Not Modified";
         response_message["400"] = "Bad Request";
-        // response_message["401"] = "Unauthorized";
+        response_message["401"] = "Unauthorized";
         response_message["403"] = "Forbidden";
         response_message["404"] = "Not Found";
         response_message["405"] = "Method Not Allowed";
         response_message["415"] = "Unsupported Media Type";
         response_message["501"] = "Not Implemented";
-        // response_message["502"] = "Bad Gateway";
-        // response_message["503"] = "Service Unavailable";
+        response_message["502"] = "Bad Gateway";
+        response_message["503"] = "Service Unavailable";
         response_message["504"] = "Gateway Timeout";
         response_message["505"] = "HTTP Version Not Supported";
         response_message["500"] = "Internal Server Error";
@@ -336,7 +339,6 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
                 {
                     check_size(s_vec, 'l'); // check first loca's path
                     vec_of_locations.push_back(controle_slash(s_vec[1]));
-                    std::cout << "first location after normal = " << controle_slash(s_vec[1]) << "\n";
                     cont_l[s_vec[0]] = controle_slash(s_vec[1]);
                     std::getline(rd_cont, str_);
                     str = strtrim(str);
@@ -358,10 +360,7 @@ int    server::parse_both(std::ifstream& rd_cont, std::string &str_)
             if (!s_vec[0].compare("error_page"))
             {
                 if (check_exist(s_vec[2]) && !check_stat(s_vec[1])) // check also stat lik 404 301 ...
-                {
-                    std::cout << "error_page = " << s_vec[1] << " " << s_vec[2] << "\n";
                     err_page[s_vec[1]] = s_vec[2];
-                }
                 else
                     print_err("syntaxt_error on the error_page");
             }
@@ -528,12 +527,10 @@ void        server::stor_values(std::vector<std::string> s, char ch)
         else if (!s[0].compare("upload"))
         {
             cont_l[s[0]] = s[1].substr(0, s[1].size());
-            std::cout << "server upload = " << s[1].substr(0, s[1].size()) << "\n";
         }
         else if (!s[0].compare("upload_path"))
         {
             cont_l[s[0]] = controle_slash(s[1].substr(0, s[1].size()));
-            std::cout << "server upload_path = " << controle_slash(s[1].substr(0, s[1].size())) << "\n";
         }
         else if (!s[0].compare("cgi_status"))
             cont_l[s[0]] = s[1].substr(0, s[1].size());

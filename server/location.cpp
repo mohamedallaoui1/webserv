@@ -1,4 +1,4 @@
-#include "../location.hpp"
+#include "../headers/location.hpp"
 
 location::location(std::map<std::string, std::string> &c, std::vector <std::string> &v_s, std::map <std::string, std::string> &cgi_m, std::string &redirc)
 {
@@ -21,7 +21,7 @@ int     location::check_exist(std::string path)
 
 void            location::print_err(std::string str)
 {
-    std::cout << str << std::endl;
+    std::cerr << str << std::endl;
     exit(1);
 }
 

@@ -22,14 +22,6 @@ class get_method
 {
     public:
         bool                checki;
-        // std::string         response;
-        // std::string         extention_type;
-        // std::stringstream   StringSize;
-        // std::streampos      fileSize;
-        // std::string         buff_s;
-        // std::stringstream   size;
-        // int                 check_path;
-        // std::map<int, std::string> err_page;
         std::map<std::string, std::string> response_message;
 
         /*************** GET FUNCTIONS ***************/
@@ -38,7 +30,6 @@ class get_method
         std::string     get_index_file(std::map<std::string, std::string> &loca_map);
         bool            check_autoindex(std::map<std::string, std::string> loca_map);
         int             get_mthod(int fd);
-        // void            err_page_();
         int             check_exist(const std::string& path);
         std::streampos  get_fileLenth(std::string path);
         std::string     get_exten_type(std::string path, std::map<std::string, std::string> &exta);

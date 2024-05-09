@@ -41,7 +41,7 @@ class Client
         std::streampos                      filePosition;
         int                                 is_cgi;
         get_method                          get;
-        request                             *requst;
+        request                             requst;
         response                            resp;
         post                                post_;
         server                              serv_;
@@ -49,6 +49,11 @@ class Client
         cgi                                 cgi_;
         time_t                              start_time;
         int                                 flagg;
+        int                                 err;
+        int                                 cgi_post;
+        int                                 f;
+        int                                 completed;
+        std::map<std::string, std::string>  err_page;
         Client(std::string uri_);
         Client(const Client& copy);
         std::map<std::string, std::string>  message_response_stat();

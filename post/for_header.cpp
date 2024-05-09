@@ -1,6 +1,6 @@
-#include "../request.hpp"
-#include "../Client.hpp"
-#include "../multplixing.hpp"
+#include "../headers/request.hpp"
+#include "../headers/Client.hpp"
+#include "../headers/multplixing.hpp"
 
 std::map<int, std::vector<server*>::iterator> server_history;
 std::map<int, int> client_history;
@@ -23,7 +23,6 @@ int isIP(std::string host) {
 }
 
 void request::getServer(int fd) {
-    // magic hh
     int client_fd = client_history[fd];
     it = server_history[client_fd];
 }
@@ -48,9 +47,9 @@ int request::parseHost(std::string hst, int fd) {
     incoming_port = (*it)->cont["listen"];
     incoming_ip = (*it)->cont["host"];
     int is_servername = 0;
-    // print with vold green the value of hst
     std::string::size_type n = std::count(hst.begin(), hst.end(), ':');
     ip = hst.substr(0, hst.find(':'));
+    std::cout << "ip : " << ip << std::endl;
     checkifservername(ip, is_servername);
     port = hst.substr(hst.find(':') + 1);
     if (((server::check_ip(ip) || server::valid_range(port)) && !is_servername) || n != 1) {
@@ -71,13 +70,12 @@ int request::parseHost(std::string hst, int fd) {
             break;
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["server_name"] == ip) {
             it = it2;
-            std::cout << "SERVER IS : " << (*it)->cont["server_name"] << std::endl;
             return (0);
         }
     }
     for (it2 = fd_maps[fd]->serv_.s.begin(); it2 != fd_maps[fd]->serv_.s.end(); it2++) {
         if ((*it2)->cont["listen"] == incoming_port && (*it2)->cont["host"] == incoming_ip) {
-            *it = *it2;
+            it = it2;
             return (0);
         }
         else
@@ -94,9 +92,8 @@ int request::parse_heade(std::string buffer, server &serv, int fd)
     std::vector<std::string> vec = serv.isolate_str(line , ' ');
     method = vec[0];
     path   = vec[1];
-    if (buffer.find("Host") == std::string::npos) {
+    if (buffer.find("Host:") == std::string::npos) {
         if (fd_maps[fd]->resp.response_error("400", fd)) {
-            std::cout << "22222222222222222222\n";
             if (multplixing::close_fd(fd, fd_maps[fd]->epoll_fd))
                 return 1;
         }
@@ -128,27 +125,27 @@ void post::parse_header(std::string buffer)
     int t = 0;
     std::istringstream stream (buffer);
     std::string line;
+    content_length = "";
+    content_type = "";
+    transfer_encoding = "";
     while (getline(stream, line))
     {
-        if (line.find("\r") != std::string::npos)
-            line.erase(line.find("\r"));
-        if (line.substr(0, 14) == "Content-Length")
+        if (line.find("Content-Length:") != std::string::npos)
         {
             content_length = line.substr(16);
-            if (atoi(content_length.c_str()) < 0)
-                content_length = "2147483647";
+            content_length.erase(content_length.find("\r"));
         }
-        else if (line.substr(0, 12) == "Content-Type" && t == 0)
+        else if (line.find("Content-Type:") != std::string::npos && t == 0)
         {
             content_type = line.substr(14);
+            content_type.erase(content_type.find("\r"));
             t = 1;
         }
-        else if (line.substr(0, 17) == "Transfer-Encoding")
+        else if (line.find("Transfer-Encoding:") != std::string::npos)
         {
             transfer_encoding = line.substr(19);
+            transfer_encoding.erase(transfer_encoding.find("\r"));
             g = 10;
         }
-        if (line == "\r")
-            return ;
     }
 }

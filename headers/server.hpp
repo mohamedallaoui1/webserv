@@ -52,6 +52,7 @@ class server : public location
         std::vector<std::string>            vec_of_locations;
         std::vector<std::string>            p_s_id;
 
+        int                                  check_forbidden(std::string path_);
         void                                check_coment(const char* file_);
         void                                check_empty(const char* rd_content);
         std::string                         controle_slash(std::string direc);
@@ -77,10 +78,8 @@ class server : public location
         int                                 check_exist(std::string path);
         static int                                 check_ip_nbr(std::string nbr);
         static int                                 check_ip(std::string ip);
-        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &error);   
+        server(std::map<std::string, std::string> &cont_s, std::vector<location*> &l_, std::vector<std::string> &vec_of_locations_, std::string &max_bdy, std::map<std::string, std::string> &err);   
         server();
-
-
 };
 
 #endif

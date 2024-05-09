@@ -6,6 +6,7 @@ application/x-apple-diskimage:.dmg
 application/vnd.apple.installer+xml:.mpkg
 application/octet-stream:.bin
 application/x-bittorrent:.torrent
+application/x-www-form-urlencoded:.txt
 text/x-c:.c
 text/css:.css
 text/csv:.csv

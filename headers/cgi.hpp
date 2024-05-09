@@ -22,7 +22,6 @@ class cgi
         void                                cgi_extention();
         void                                cgi_work(int fd);
         std::vector<std::string>            cgi_env;
-        // std::map<std::string, std::string>  cgi_env;
         char**                              env;
         std::map<std::string,std::string>   exten_cgi;
         void                                get_exten_type(int fd);
@@ -60,7 +59,6 @@ class cgi
             this->stat_cgi = copy.stat_cgi;
             this->cgi_env = copy.cgi_env;
             this->env = copy.env;
-            // this->exten_cgi = copy.exten_cgi;
             this->cgi_stat = copy.cgi_stat;
             this->REQUEST_METHOD = copy.REQUEST_METHOD;
             this->SCRIPT_NAME = copy.SCRIPT_NAME;

@@ -1,5 +1,5 @@
-#include "../request.hpp"
-#include "../Client.hpp"
+#include "../headers/request.hpp"
+#include "../headers/Client.hpp"
 #define MAX_PATH = 1000;
 extern std::map<int, Client *> fd_maps;
 extern int query;
@@ -14,11 +14,8 @@ int               request::one_of_allowed(std::string mehod, std::vector<std::st
     }
     std::vector<std::string>::iterator it = allowed_methods.begin();
     std::vector<std::string>::iterator ite = allowed_methods.end();
-    if ((*it).compare("allow_methods"))
-    {
-        exit (1);
+    if (!(*it).compare("allow_methods"))
         it++;
-    }
     while (it != ite)
     {
         if (!it->compare(mehod))
@@ -48,7 +45,7 @@ int            request::check_path_access(std::string path)
 {
     char current_path_[1000];
     std::string compare_root_loca = loca__root.substr(0, loca__root.length() - 1);
-    if (realpath(path.c_str(), current_path_) !=   NULL) // leak
+    if (realpath(path.c_str(), current_path_) !=   NULL)
     {
         std::string current_path(current_path_);
         if (current_path.compare(0, compare_root_loca.length(), compare_root_loca) != 0)
@@ -72,7 +69,7 @@ int    checkcgi(request& rq, int& iscgi, int fd) {
         return 0;
     }
     std::string file = std::string(it, path.end());
-    if (fd_maps[fd]->requst->cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd]->requst->cgi_map.end()) {
+    if (fd_maps[fd]->requst.cgi_map.find(file.substr(file.find_last_of(".") + 1)) != fd_maps[fd]->requst.cgi_map.end()) {
         iscgi = 1;
         return 1;
     }
@@ -105,12 +102,23 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
 {
     if (parse_heade(rq, server, fd) == 1)
         return 1;
-    map_error = (*it)->err_page;
+    std::cout << "severNAME : " << (*it)->cont["server_name"] << std::endl;
+    if (!fd_maps[fd]->err) {
+        fd_maps[fd]->err_page = (*it)->err_page;
+        fd_maps[fd]->err = 1;
+    }
     std::map<int, Client *>::iterator it = fd_maps.find(fd);
     int             state;
+    it->second->resp.response_message = server.response_message;
 
     last          = rq.find("\r\n");
     vec           = server.isolate_str(rq.substr(0, last) , ' ');
+    if (vec.size() != 3 || last == std::string::npos)
+    {
+        state = it->second->resp.response_error("400", fd);    
+        it->second->not_allow_method = 1;
+        return 0;        
+    }
     method        = vec[0];
     path          = vec[1];
     http_version  = vec[2];
@@ -120,21 +128,19 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
         it->second->not_allow_method = 1;
         return 0;
     } 
-    it->second->resp.response_message = server.response_message;
+    if (it->second->serv_.check_forbidden(path))
+    {
+        state = it->second->resp.response_error("400", fd);    
+        it->second->not_allow_method = 1;
+        return 0;        
+    }
     if (path == "/favicon.ico")
     {
-        state = it->second->resp.response_error("202", fd);
+        state = it->second->resp.response_error("404", fd);
         it->second->not_allow_method = 1;
         return 0;
     }
-    /********************* edited by mhassani *****************/
-    // std::cout << "uri: " << uri << std::endl;
-    /********************* end **********************/
-    std::cout << "is cgi: " << fd_maps[fd]->is_cgi << std::endl;
-    std::cout << "URI = " << it->second->requst->uri << std::endl;
     uri = get_full_uri(server, *it->second);
-
-    std::cout << "URI = " << uri << std::endl;
     if (uri.empty())
     {
         state = it->second->resp.response_error("404", fd);    
@@ -145,18 +151,12 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
     if (access(uri.c_str(), F_OK) < 0)
         uri = hex_to_ascii(uri);
     x = it->second->get.check_exist(uri);
-    if (redirection_stat == 1) // 0000
+    if (redirection_stat == 1)
     {
         std::string msg = "HTTP/1.1 301 Moved Permanently\r\nlocation: " + it->second->redirec_path + "\r\n\r\n";
         write(fd, msg.c_str(), msg.length());
         it->second->not_allow_method = 1;
         return 0;
-    }
-    if (vec.size() != 3 || last == std::string::npos)
-    {
-        state = it->second->resp.response_error("400", fd);    
-        it->second->not_allow_method = 1;
-        return 0;        
     }
     if (check_path_access(uri))
     {
@@ -178,13 +178,6 @@ int            request::parse_req(std::string   rq, server &server, int fd) // y
             return 0;
         }
     }
-    // if (!get_exten_type(uri).compare("Unsupported"))
-    // {
-    //     state = it->second->resp.response_error("415", fd);
-    //     it->second->not_allow_method = 1;
-    //     return 0;
-    // }
-    (void)state;
     reset();
     return 0;
 }
@@ -222,7 +215,6 @@ std::string     request::get_full_uri(server &server, Client& obj)
 {
     int     loca_found = 0;
     longest_loca = find_longest_path(server, obj);
-    std::cout << "longest: " << longest_loca << std::endl;
     // if (longest_loca == "/" && path.length() > 1)
     //     return ("404");
     if (longest_loca == "move_permently")
@@ -237,7 +229,6 @@ std::string     request::get_full_uri(server &server, Client& obj)
     for (size_t j = 0; j < (*it)->l.size(); j++)
     {
         loca_found = rewrite_location((*it)->l[j]->cont_l);
-        // std::cout << "size_,map = " << (*it)->l[j]->cont_l.size() << "\n";
         if (loca_found)
         {
             cgi_map = (*it)->l[j]->cgi_map;
@@ -257,12 +248,14 @@ std::string     request::get_full_uri(server &server, Client& obj)
 int           request::rewrite_location(std::map<std::string, std::string> location_map)
 {
     std::map<std::string, std::string>::iterator      ite = location_map.end();
+    std::map<std::string, std::string>::iterator      it_cgi_check = location_map.find("cgi_status");
+
+    if (it_cgi_check == location_map.end())
+        stat_cgi = "off";
     for (std::map<std::string, std::string>::iterator itb = location_map.begin(); itb != ite; itb++)
     {
         if ((!(*itb).first.compare("upload")))
-        {
             upload_state = (*itb).second;
-        }
         if ((!(*itb).first.compare("root")))
             loca__root = (*itb).second;
         if ((!itb->first.compare("cgi_status")))  
@@ -286,7 +279,6 @@ int           request::rewrite_location(std::map<std::string, std::string> locat
             if (!rest_fldr.empty()) // rest 3amr
             {
                 full_path = (*it_b).second + "/" + rest_fldr;
-                std::cout << "full_path = " << full_path << "\n";
                 check = 1;
                 return 1;
             }
@@ -330,7 +322,7 @@ bool            request::check_autoindex(std::map<std::string, std::string> loca
 void        request::fill_extentions()
 {   
     extentions["html"] = "text/html; charset=UTF-8"; 
-    extentions["txt"]  = "text/plain; charset=UTF-8"; 
+    extentions["txt"]  = "text/plain"; 
     extentions["jpg"] = "image/jpg"; 
     extentions["jpeg"] = "image/jpeg";
     extentions["png"] = "image/png";
@@ -363,6 +355,8 @@ void        request::fill_extentions()
 
 void request::reset() 
 {
+    k = 0;
+    method_state = false;
     http_version.clear();
     loca_fldr.clear();
     rest_fldr.clear();
@@ -384,7 +378,7 @@ std::string     request::get_exten_type(std::string path)
     if (b != extentions.end())
         return ((*b).second);
     if ((b == extentions.end() ) && !check_cgi_exten(exten) && x == 1)
-        return ("text/html; charset=UTF-8");
+        return ("text/html");
     return "10";
 }
 
@@ -402,7 +396,6 @@ std::streampos  request::get_fileLenth(std::string path)
 }
 
 request::request(/* args */){
-    std::cout << " hi \n";
     found = false;
     check = false;
     auto_index_stat = false;
