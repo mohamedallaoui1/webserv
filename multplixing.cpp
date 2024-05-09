@@ -284,6 +284,11 @@ void        multplixing::lanch_server(server parse)
                                     continue ;
                             }
                         }
+                        else if (fd_maps[events[i].data.fd]->post_.g == 5)
+                        {
+                            if (close_fd(events[i].data.fd, epoll_fd))
+                                continue ;
+                        }
                     }
                     /****************        end        *********************/
                     fd_maps[events[i].data.fd]->u_can_send = 1;

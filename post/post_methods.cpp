@@ -84,9 +84,7 @@ bool post::post_method(std::string buffer, int fd)
     g = 0;
     if (buffer.find("\r\n\r\n") != std::string::npos && fd_maps[fd]->f == 0)
     {
-        std::cout << "enter.\n";
         parse_header(buffer.substr(0, buffer.find("\r\n\r\n") + 4));
-        std::cout << "CL: " << content_length << std::endl;
         buffer = buffer.substr(buffer.find("\r\n\r\n") + 4);
         if (content_type.empty() || (content_length.empty() && transfer_encoding != "chunked"))
         {
@@ -104,17 +102,32 @@ bool post::post_method(std::string buffer, int fd)
             {
                 fd_maps[fd]->cgi_.file_in = generateCgiName();
                 outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
+                if (!outFile.is_open())
+                {
+                    g = 5;
+                    return true;
+                }
             }
             else
             {
                 file = generateUniqueFilename() + extension;
                 outFile.open((it_->second->requst.upload_path + file).c_str());
+                if (!outFile.is_open())
+                {
+                    g = 5;
+                    return true;
+                }
             }
         }
         else if (it_->second->is_cgi && content_type.substr(0, 19) == "multipart/form-data")
         {
             fd_maps[fd]->cgi_.file_in = generateCgiName();
             outFile.open(("/tmp/" + fd_maps[fd]->cgi_.file_in).c_str());
+            if (!outFile.is_open())
+            {
+                g = 5;
+                return true;
+            }
         }
         else if (content_type.substr(0, 19) != "multipart/form-data")
             return true;
@@ -225,6 +238,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = name + generateUniqueSuffix() + extension;
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -232,6 +258,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = generateUniqueFilename() + extension;
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -239,6 +278,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = name + generateUniqueSuffix() + ".txt";
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -246,6 +298,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = generateUniqueFilename() + ".txt";
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -253,6 +318,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = name + generateUniqueSuffix() + ".txt";
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -260,6 +338,19 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
                 {
                     file = generateUniqueFilename() + ".txt";
                     outFile.open((upload_path + file).c_str());
+                    if (!outFile.is_open())
+                    {
+                        for (size_t i = 0; i < vec.size(); i++)
+                            remove(vec.at(i).c_str());
+                        outFile.close();
+                        vec.clear();
+                        concat.clear();
+                        len = 0;
+                        fd_maps[fd]->f = 0; // header flag;
+                        v = 0;
+                        g = 5;
+                        return true;
+                    }
                     vec.push_back(upload_path + file);
                     v = 1;
                 }
@@ -293,7 +384,6 @@ bool post::boundary(std::string buffer, std::string max_body_size, std::string u
             if (concat.length() > sep.length())
             {
                 outFile << concat.substr(0, concat.length() - sep.length());
-                // len += concat.substr(0, concat.length() - sep.length()).length();
                 if (len > atol(max_body_size.c_str()))
                 {
                     for (size_t i = 0; i < vec.size(); i++)
@@ -390,6 +480,16 @@ bool post::chunked(std::string buffer, std::string max_body_size, std::string up
         }
         return is_end_of_chunk(max_body_size, upload_path, fd_maps[fd]->f);
     }
+    else
+    {
+        outFile.close();
+        outFile.clear();
+        concat.clear();
+        chunk_length = 0;
+        fd_maps[fd]->f = 0;
+        g = 5;
+        return true;
+    }
     return false;
 }
 
@@ -428,6 +528,15 @@ bool post::binary(std::string buffer, std::string max_body_size, std::string upl
             g = 0; // request flag;
             return true;
         }
+    }
+    else
+    {
+        outFile.close();
+        buffer.clear();
+        body_size = 0;
+        fd_maps[fd]->f = 0;
+        g = 5;
+        return true;
     }
     return false;
 }
@@ -471,6 +580,17 @@ bool post::boundary_CGI(std::string buffer, std::string max_body_size, int fd)
             fd_maps[fd]->f = 0;
             return true;
         }
+    }
+    else
+    {
+        concat.clear();
+        outFile.close();
+        CType.clear();
+        vec.clear();
+        v = 0;
+        fd_maps[fd]->f = 0;
+        g = 5;
+        return true;
     }
     return false;
 }
